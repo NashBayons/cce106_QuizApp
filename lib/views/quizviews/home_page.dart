@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:quiz_app/views/authviews/login_page.dart';
 import 'package:quiz_app/views/quizviews/create_quiz.dart';
 import 'package:quiz_app/views/quizviews/quiz_list.dart';
+import 'package:quiz_app/views/quizviews/result_list.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -71,7 +72,14 @@ class HomePage extends StatelessWidget {
                 menuButton(
                   label: "View Results",
                   icon: Icons.list_alt_rounded,
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const ResultsListPage(),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),

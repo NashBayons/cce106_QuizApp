@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:quiz_app/services/quiz_services.dart';
 import 'package:quiz_app/views/quizviews/edit_quiz.dart';
+import 'package:quiz_app/views/quizviews/take_quiz_page.dart';
 
 class QuizListPage extends StatelessWidget {
   final QuizService quizService = QuizService();
@@ -65,6 +66,20 @@ class QuizListPage extends StatelessWidget {
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      IconButton(
+                          icon: const Icon(Icons.play_arrow, color: Colors.green),
+                          onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => QuizTakingPage(
+                                  quizId: quiz.id,
+                                  quizTitle: title,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
                       // Edit quiz
                       IconButton(
                         icon: const Icon(Icons.edit, color: Colors.orange),
