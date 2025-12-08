@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:quiz_app/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:quiz_app/services/auth_service.dart';
+import 'package:quiz_app/theme/app_theme.dart';
 import 'package:quiz_app/views/authviews/login_page.dart';
 import 'package:quiz_app/views/quizviews/home_page.dart';
 
@@ -19,25 +20,29 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false, 
+      debugShowCheckedModeBanner: false,
       title: 'Quiz Maker',
-      theme: ThemeData(
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
-      ),
+      theme: AppTheme.lightTheme,
       home: StreamBuilder(
-        stream: AuthService().userStream, 
+        stream: AuthService().userStream,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
+            return Scaffold(
+              backgroundColor: AppTheme.backgroundColor,
+              body: Center(
+                child: CircularProgressIndicator(
+                  valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+                ),
+              ),
             );
           }
           if (snapshot.hasData) {
-            return HomePage();
+            return const HomePage();
           } else {
             return LoginPage();
           }
-        }),
+        },
+      ),
     );
   }
 }

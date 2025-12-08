@@ -4,6 +4,7 @@ class QuestionModel {
   String question;
   List<String> options;
   int correctIndex;
+  String questionType;
 
   QuestionModel({
     this.id = '',
@@ -11,6 +12,7 @@ class QuestionModel {
     required this.question,
     required this.options,
     required this.correctIndex,
+    this.questionType = 'multiple_choice',
   });
 
   factory QuestionModel.fromMap(String id, Map<String, dynamic> data) {
@@ -20,6 +22,7 @@ class QuestionModel {
       question: data['question'] ?? '',
       options: List<String>.from(data['options'] ?? []),
       correctIndex: data['correctIndex'] ?? 0,
+      questionType: data['questionType'] ?? 'multiple_choice',
     );
   }
 
@@ -29,6 +32,7 @@ class QuestionModel {
       'question': question,
       'options': options,
       'correctIndex': correctIndex,
+      'questionType': questionType,
     };
   }
 }

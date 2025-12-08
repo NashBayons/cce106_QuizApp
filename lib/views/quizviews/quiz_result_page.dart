@@ -11,7 +11,7 @@ class QuizResultPage extends StatefulWidget {
   final int totalQuestions;
   final int correctAnswers;
   final List<QuestionModel> questions;
-  final Map<String, int> userAnswers;
+  final Map<String, dynamic> userAnswers;
 
   const QuizResultPage({
     super.key,
@@ -41,10 +41,7 @@ class _QuizResultPageState extends State<QuizResultPage> {
     
     final resultService = ResultService();
     
-    final answersMap = Map<String, dynamic>.from(
-      widget.userAnswers.map((key, value) => MapEntry(key, value))
-    );
-    
+    final answersMap = Map<String, dynamic>.from(widget.userAnswers);
     final result = QuizResultModel(
       id: '',
       quizId: widget.quizId,
@@ -80,6 +77,9 @@ class _QuizResultPageState extends State<QuizResultPage> {
     if (percentage >= 60) return Colors.deepOrange;
     return Colors.red;
   }
+
+  String _normalize(String value) =>
+      value.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
 
   @override
   Widget build(BuildContext context) {
@@ -188,8 +188,39 @@ class _QuizResultPageState extends State<QuizResultPage> {
               ...widget.questions.asMap().entries.map((entry) {
                 final index = entry.key;
                 final question = entry.value;
-                final userAnswer = widget.userAnswers[question.id];
-                final isCorrect = userAnswer == question.correctIndex;
+                final dynamic userAnswer = widget.userAnswers[question.id];
+                final bool isIdentification =
+                    question.questionType == 'identification';
+
+                bool isCorrect;
+                String userAnswerText;
+                String correctAnswerText;
+
+                if (isIdentification) {
+                  final correctText = question.options.isNotEmpty
+                      ? question.options.first
+                      : '';
+                  final typedText =
+                      userAnswer is String ? userAnswer : '';
+                  userAnswerText =
+                      typedText.isEmpty ? 'No answer provided' : typedText;
+                  correctAnswerText = correctText.isEmpty
+                      ? 'No answer stored'
+                      : correctText;
+                  isCorrect = typedText.isNotEmpty &&
+                      _normalize(typedText) == _normalize(correctText);
+                } else {
+                  final selectedIndex = userAnswer is int ? userAnswer : null;
+                  isCorrect = selectedIndex == question.correctIndex;
+                  userAnswerText = (selectedIndex != null &&
+                          selectedIndex >= 0 &&
+                          selectedIndex < question.options.length)
+                      ? question.options[selectedIndex]
+                      : 'No answer selected';
+                  correctAnswerText = question.options.isNotEmpty
+                      ? question.options[question.correctIndex]
+                      : 'No correct answer set';
+                }
 
                 return Container(
                   margin: const EdgeInsets.only(bottom: 15),
@@ -233,40 +264,38 @@ class _QuizResultPageState extends State<QuizResultPage> {
                         ),
                       ),
                       const SizedBox(height: 15),
-                      // Show user's answer
-                      if (userAnswer != null)
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: isCorrect 
-                                ? Colors.green.withOpacity(0.1)
-                                : Colors.red.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: isCorrect ? Colors.green : Colors.red,
-                            ),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Your Answer:",
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: isCorrect ? Colors.green : Colors.red,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 5),
-                              Text(
-                                question.options[userAnswer],
-                                style: const TextStyle(fontSize: 14),
-                              ),
-                            ],
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: isCorrect
+                              ? Colors.green.withOpacity(0.1)
+                              : Colors.red.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: isCorrect ? Colors.green : Colors.red,
                           ),
                         ),
-                      // Show correct answer if user was wrong
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Your Answer:",
+                              style: TextStyle(
+                                fontSize: 12,
+                                color:
+                                    isCorrect ? Colors.green : Colors.red,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 5),
+                            Text(
+                              userAnswerText,
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                          ],
+                        ),
+                      ),
                       if (!isCorrect) ...[
                         const SizedBox(height: 10),
                         Container(
@@ -290,7 +319,7 @@ class _QuizResultPageState extends State<QuizResultPage> {
                               ),
                               const SizedBox(height: 5),
                               Text(
-                                question.options[question.correctIndex],
+                                correctAnswerText,
                                 style: const TextStyle(fontSize: 14),
                               ),
                             ],

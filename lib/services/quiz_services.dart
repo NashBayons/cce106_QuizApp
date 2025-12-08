@@ -9,7 +9,7 @@ class QuizService {
 
   /// Create quiz
   Future<String?> addQuiz(String title, String desc) async {
-    await _db
+    final docRef = await _db
         .collection("users")
         .doc(userId)
         .collection("quizzes")
@@ -19,6 +19,7 @@ class QuizService {
       "ownerId": userId,
       "createdAt": DateTime.now().toIso8601String(),
     });
+    return docRef.id;
   }
 
   Stream<QuerySnapshot> getQuizzes() {
