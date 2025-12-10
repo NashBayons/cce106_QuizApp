@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:quiz_app/services/auth_service.dart';
 import 'package:quiz_app/theme/app_theme.dart';
+import 'package:quiz_app/views/adminviews/admin_dashboard.dart';
 import 'package:quiz_app/views/authviews/forgot_password.dart';
 import 'package:quiz_app/views/authviews/register.dart';
 import 'package:quiz_app/views/quizviews/home_page.dart';
@@ -167,18 +168,31 @@ class _LoginPageState extends State<LoginPage> {
                               emailCtrl.text.trim(), 
                               passwordCtrl.text
                             );
-                            setState(() => isLoading = false);
                             
                             if (user != null) {
                               if (!user.emailVerified) {
+                                setState(() => isLoading = false);
                                 _showErrorSnackBar("Please verify your email before logging in.");
                               } else {
-                                Navigator.pushReplacement(
-                                  context, 
-                                  MaterialPageRoute(builder: (_) => HomePage()),
-                                );
+                                // Fetch user role from Firestore
+                                final role = await auth.getUserRole(user.uid);
+                                setState(() => isLoading = false);
+                                
+                                // Navigate based on role
+                                if (role == 'admin') {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(builder: (_) => const AdminDashboard()),
+                                  );
+                                } else {
+                                  Navigator.pushReplacement(
+                                    context, 
+                                    MaterialPageRoute(builder: (_) => const HomePage()),
+                                  );
+                                }
                               }
                             } else {
+                              setState(() => isLoading = false);
                               _showErrorSnackBar("Invalid email or password");
                             }
                           },
@@ -245,12 +259,27 @@ class _LoginPageState extends State<LoginPage> {
                           onPressed: isLoading ? null : () async {
                             setState(() => isLoading = true);
                             final user = await auth.signInWithGoogle();
-                            setState(() => isLoading = false);
+                            
                             if (user != null) {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(builder: (_) => HomePage()),
-                              );
+                              // Fetch user role from Firestore
+                              final role = await auth.getUserRole(user.uid);
+                              setState(() => isLoading = false);
+                              
+                              // Navigate based on role
+                              if (role == 'admin') {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const AdminDashboard()),
+                                );
+                              } else {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const HomePage()),
+                                );
+                              }
+                            } else {
+                              setState(() => isLoading = false);
+                              _showErrorSnackBar("Google sign-in failed. Please try again.");
                             }
                           },
                           icon: const Icon(Icons.g_mobiledata, size: 24),

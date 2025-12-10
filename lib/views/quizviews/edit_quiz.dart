@@ -458,23 +458,25 @@ class _EditQuizPageState extends State<EditQuizPage> {
                 child: InkWell(
                   borderRadius: BorderRadius.circular(12),
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => AddQuestionPage(
-                          quizId: widget.quizId,
-                          existingQuestionId: q.id,
-                          existingQuestionText: q.question,
-                          existingOptions: q.options,
-                          existingCorrectIndex: q.correctIndex,
-                          existingQuestionType: q.questionType,
-                          allowTypeSwitch: true,
-                          initialType: QuestionTypeX.fromStorage(
-                            q.questionType,
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => AddQuestionPage(
+                            quizId: widget.quizId,
+                            existingQuestionId: q.id,
+                            existingQuestionText: q.question,
+                            existingOptions: q.options,
+                            existingCorrectIndex: q.correctIndex,
+                            existingQuestionType: q.questionType,
+                            existingQuestionImageUrl: q.questionImageUrl,
+                            existingOptionImageUrls: q.optionImageUrls,
+                            allowTypeSwitch: true,
+                            initialType: QuestionTypeX.fromStorage(
+                              q.questionType,
+                            ),
                           ),
                         ),
-                      ),
-                    );
+                      );
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(10),

@@ -3,6 +3,7 @@ import 'package:quiz_app/models/question_model.dart';
 import 'package:quiz_app/models/question_type.dart';
 import 'package:quiz_app/services/question_service.dart';
 import 'package:quiz_app/theme/app_theme.dart';
+import 'package:quiz_app/widgets/image_picker_widget.dart';
 
 class AddQuestionPage extends StatefulWidget {
   final String quizId;
@@ -11,6 +12,8 @@ class AddQuestionPage extends StatefulWidget {
   final List<String>? existingOptions;
   final int? existingCorrectIndex;
   final String? existingQuestionType;
+  final String? existingQuestionImageUrl;
+  final List<String?>? existingOptionImageUrls;
   final QuestionType initialType;
   final bool allowTypeSwitch;
 
@@ -22,6 +25,8 @@ class AddQuestionPage extends StatefulWidget {
     this.existingOptions,
     this.existingCorrectIndex,
     this.existingQuestionType,
+    this.existingQuestionImageUrl,
+    this.existingOptionImageUrls,
     this.initialType = QuestionType.multipleChoice,
     this.allowTypeSwitch = false,
   });
@@ -41,6 +46,10 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
   int correctIndex = 0;
   late QuestionType selectedType;
   bool _isLoading = false;
+  
+  // Image URLs
+  String? questionImageUrl;
+  List<String?> optionImageUrls = [];
 
   bool get isEditMode => widget.existingQuestionId != null;
 
@@ -52,6 +61,11 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
         : widget.initialType;
     questionCtrl.text = widget.existingQuestionText ?? '';
     correctIndex = widget.existingCorrectIndex ?? 0;
+    
+    // Initialize image URLs
+    questionImageUrl = widget.existingQuestionImageUrl;
+    optionImageUrls = widget.existingOptionImageUrls ?? [];
+    
     _initializeControllers(shouldPrefill: true);
   }
 
@@ -82,6 +96,13 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
           List.generate(4 - optionCtrls.length, (_) => TextEditingController()),
         );
       }
+      
+      // Ensure optionImageUrls list matches the number of options
+      if (!shouldPrefill || optionImageUrls.length < 4) {
+        while (optionImageUrls.length < 4) {
+          optionImageUrls.add(null);
+        }
+      }
     } else {
       optionCtrls = List.generate(4, (_) => TextEditingController());
     }
@@ -97,6 +118,8 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
 
     if (!shouldPrefill) {
       correctIndex = 0;
+      questionImageUrl = null;
+      optionImageUrls = [];
     }
   }
 
@@ -140,6 +163,10 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
         options: options,
         correctIndex: correctIndex,
         questionType: selectedType.storageValue,
+        questionImageUrl: questionImageUrl,
+        optionImageUrls: selectedType == QuestionType.multipleChoice && optionImageUrls.isNotEmpty
+            ? optionImageUrls
+            : null,
       );
 
       if (widget.existingQuestionId == null) {
@@ -178,6 +205,8 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
         controller.clear();
       }
       correctIndex = 0;
+      questionImageUrl = null;
+      optionImageUrls = List.filled(4, null);
     });
   }
 
@@ -251,6 +280,17 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                     }
                     return null;
                   },
+                ),
+                const SizedBox(height: 16),
+                // Question Image Picker
+                ImagePickerWidget(
+                  initialImageUrl: questionImageUrl,
+                  onImageSelected: (url) {
+                    setState(() {
+                      questionImageUrl = url;
+                    });
+                  },
+                  label: 'Add Image to Question (Optional)',
                 ),
                 const SizedBox(height: 24),
                 _buildTypeSpecificFields(),
@@ -386,6 +426,11 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
           'Provide up to 4 answer choices and mark the correct one.',
           style: TextStyle(color: Color(0xFF6B7280)),
         ),
+        const SizedBox(height: 8),
+        const Text(
+          'You can optionally add images to each answer choice.',
+          style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 13),
+        ),
         const SizedBox(height: 16),
         ...List.generate(optionCtrls.length, (index) {
           final isCorrect = correctIndex == index;
@@ -401,44 +446,63 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                   width: isCorrect ? 2 : 1,
                 ),
               ),
-              child: Row(
+              child: Column(
                 children: [
-                  GestureDetector(
-                    onTap: () => setState(() => correctIndex = index),
-                    child: Container(
-                      width: 22,
-                      height: 22,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: isCorrect
-                              ? AppTheme.primaryColor
-                              : AppTheme.textSecondary,
+                  Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => setState(() => correctIndex = index),
+                        child: Container(
+                          width: 22,
+                          height: 22,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: isCorrect
+                                  ? AppTheme.primaryColor
+                                  : AppTheme.textSecondary,
+                            ),
+                            color:
+                                isCorrect ? AppTheme.primaryColor : Colors.transparent,
+                          ),
+                          child: isCorrect
+                              ? const Icon(Icons.check, size: 14, color: Colors.white)
+                              : null,
                         ),
-                        color:
-                            isCorrect ? AppTheme.primaryColor : Colors.transparent,
                       ),
-                      child: isCorrect
-                          ? const Icon(Icons.check, size: 14, color: Colors.white)
-                          : null,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextFormField(
-                      controller: optionCtrls[index],
-                      decoration: InputDecoration(
-                        hintText: 'Answer option ${index + 1}',
-                        border: InputBorder.none,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextFormField(
+                          controller: optionCtrls[index],
+                          decoration: InputDecoration(
+                            hintText: 'Answer option ${index + 1}',
+                            border: InputBorder.none,
+                          ),
+                          textCapitalization: TextCapitalization.sentences,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Required';
+                            }
+                            return null;
+                          },
+                        ),
                       ),
-                      textCapitalization: TextCapitalization.sentences,
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Required';
-                        }
-                        return null;
-                      },
-                    ),
+                      const SizedBox(width: 8),
+                      // Compact image picker for this option
+                      ImagePickerWidget(
+                        compact: true,
+                        initialImageUrl: index < optionImageUrls.length ? optionImageUrls[index] : null,
+                        onImageSelected: (url) {
+                          setState(() {
+                            // Ensure list is large enough
+                            while (optionImageUrls.length <= index) {
+                              optionImageUrls.add(null);
+                            }
+                            optionImageUrls[index] = url;
+                          });
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),

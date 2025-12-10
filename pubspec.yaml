@@ -43,6 +43,8 @@ dev_dependencies:
   firebase_auth: ^6.1.2
   google_sign_in: ^5.4.0
   intl: ^0.18.1
+  cloudinary_public: ^0.23.1
+  image_picker: ^1.0.0
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

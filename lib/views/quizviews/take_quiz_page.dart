@@ -410,6 +410,32 @@ class _QuizTakingPageState extends State<QuizTakingPage> {
                           height: 1.4,
                         ),
                       ),
+                      // Display question image if available
+                      if (currentQuestion.questionImageUrl != null) ...[
+                        const SizedBox(height: 16),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(
+                            currentQuestion.questionImageUrl!,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                padding: const EdgeInsets.all(16),
+                                color: Colors.grey[200],
+                                child: const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.broken_image, color: Colors.grey),
+                                    SizedBox(width: 8),
+                                    Text('Image failed to load', style: TextStyle(color: Colors.grey)),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -460,45 +486,74 @@ class _QuizTakingPageState extends State<QuizTakingPage> {
                                               ),
                                             ],
                                     ),
-                                    child: Row(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Container(
-                                          width: 24,
-                                          height: 24,
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            color: isSelected
-                                                ? Colors.white
-                                                : const Color(0xFFE5E7EB),
-                                            border: Border.all(
-                                              color: isSelected
-                                                  ? Colors.white
-                                                  : const Color(0xFF9CA3AF),
-                                              width: 2,
+                                        // Display option image if available
+                                        if (currentQuestion.optionImageUrls != null &&
+                                            index < currentQuestion.optionImageUrls!.length &&
+                                            currentQuestion.optionImageUrls![index] != null) ...[
+                                          ClipRRect(
+                                            borderRadius: BorderRadius.circular(12),
+                                            child: Image.network(
+                                              currentQuestion.optionImageUrls![index]!,
+                                              width: double.infinity,
+                                              height: 120,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (context, error, stackTrace) {
+                                                return Container(
+                                                  height: 120,
+                                                  color: Colors.grey[200],
+                                                  child: const Center(
+                                                    child: Icon(Icons.broken_image, color: Colors.grey),
+                                                  ),
+                                                );
+                                              },
                                             ),
                                           ),
-                                          child: isSelected
-                                              ? const Icon(
-                                                  Icons.check,
-                                                  size: 16,
-                                                  color: AppTheme.primaryColor,
-                                                )
-                                              : null,
-                                        ),
-                                        const SizedBox(width: 16),
-                                        Expanded(
-                                          child: Text(
-                                            currentQuestion.options[index],
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: isSelected
-                                                  ? FontWeight.bold
-                                                  : FontWeight.w500,
-                                              color: isSelected
-                                                  ? Colors.white
-                                                  : const Color(0xFF1F2937),
+                                          const SizedBox(height: 12),
+                                        ],
+                                        Row(
+                                          children: [
+                                            Container(
+                                              width: 24,
+                                              height: 24,
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                color: isSelected
+                                                    ? Colors.white
+                                                    : const Color(0xFFE5E7EB),
+                                                border: Border.all(
+                                                  color: isSelected
+                                                      ? Colors.white
+                                                      : const Color(0xFF9CA3AF),
+                                                  width: 2,
+                                                ),
+                                              ),
+                                              child: isSelected
+                                                  ? const Icon(
+                                                      Icons.check,
+                                                      size: 16,
+                                                      color: AppTheme.primaryColor,
+                                                    )
+                                                  : null,
                                             ),
-                                          ),
+                                            const SizedBox(width: 16),
+                                            Expanded(
+                                              child: Text(
+                                                currentQuestion.options[index],
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: isSelected
+                                                      ? FontWeight.bold
+                                                      : FontWeight.w500,
+                                                  color: isSelected
+                                                      ? Colors.white
+                                                      : const Color(0xFF1F2937),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),

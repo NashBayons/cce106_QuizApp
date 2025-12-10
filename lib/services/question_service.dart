@@ -1,11 +1,25 @@
 // lib/services/question_service.dart
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/question_model.dart';
+import 'package:flutter/material.dart';
+import 'package:cloudinary_public/cloudinary_public.dart';
+
+class PickedImage{
+  final File file;
+  final String url;
+  PickedImage({required this.file, required this.url});
+}
 
 class QuestionService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  // final CloudinaryPublic _cloudinary = CloudinaryPublic(
+  //   'do5oq5ntc', 'quiz_maker'
+  //   cache:false,
+  // );
 
   String get userId => _auth.currentUser!.uid;
 
