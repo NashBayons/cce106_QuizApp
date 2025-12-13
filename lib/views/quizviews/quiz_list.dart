@@ -241,7 +241,7 @@ class _QuizListPageState extends State<QuizListPage> {
                 ),
                 const SizedBox(width: 8),
                 _buildIconButton(
-                  icon: Icons.edit_outlined,
+                  icon: Icons.edit_rounded,
                   color: AppTheme.warningColor,
                   onPressed: () {
                     Navigator.push(
@@ -258,7 +258,7 @@ class _QuizListPageState extends State<QuizListPage> {
                 ),
                 const SizedBox(width: 8),
                 _buildIconButton(
-                  icon: Icons.delete_outline,
+                  icon: Icons.delete_rounded,
                   color: AppTheme.errorColor,
                   onPressed: () => confirmDelete(context, quizId),
                 ),

@@ -21,13 +21,24 @@ class AdminService {
         'Multiple Choice': 0,
         'True or False': 0,
         'Identification': 0,
+        'Mixed': 0,
       };
+      
+      // Group questions by quizId to identify mixed quizzes
+      Map<String, Set<String>> quizQuestionTypes = {};
       
       for (var doc in questions.docs) {
         final data = doc.data();
         final questionType = data['questionType'] as String? ?? 'multiple_choice';
+        final quizId = data['quizId'] as String? ?? '';
         
-        // Map storage values to display names
+        // Track question types per quiz
+        if (quizId.isNotEmpty) {
+          quizQuestionTypes.putIfAbsent(quizId, () => <String>{});
+          quizQuestionTypes[quizId]!.add(questionType);
+        }
+        
+        // Map storage values to display names and count question types
         String displayName;
         switch (questionType) {
           case 'multiple_choice':
@@ -46,8 +57,17 @@ class AdminService {
         questionTypeCounts[displayName] = (questionTypeCounts[displayName] ?? 0) + 1;
       }
 
-      // Remove types with 0 count
-      questionTypeCounts.removeWhere((key, value) => value == 0);
+      // Count quizzes with multiple question types as "Mixed"
+      int mixedQuizCount = 0;
+      for (var types in quizQuestionTypes.values) {
+        if (types.length > 1) {
+          mixedQuizCount++;
+        }
+      }
+      questionTypeCounts['Mixed'] = mixedQuizCount;
+
+      // Remove types with 0 count (except Mixed which should always show)
+      questionTypeCounts.removeWhere((key, value) => value == 0 && key != 'Mixed');
 
       // Calculate role distribution
       int adminCount = 0;
@@ -61,22 +81,39 @@ class AdminService {
           regularUserCount++;
         }
       }
-
+      
       // Calculate active users (users who have taken quizzes)
-      // FIXED: Properly extract user IDs from the document reference path
-      Set<String> activeUserIds = {};
+      // Extract user IDs from results and only count those that exist in users collection
+      Set<String> allUserIdsFromResults = {};
       for (var doc in results.docs) {
         // The path is: users/{userId}/results/{resultId}
         // We need to get the userId from the parent collection
         final parentRef = doc.reference.parent.parent;
         if (parentRef != null) {
-          activeUserIds.add(parentRef.id);
+          allUserIdsFromResults.add(parentRef.id);
         }
       }
 
-      print('🔍 Debug - Total users: ${users.size}');
-      print('🔍 Debug - Active users: ${activeUserIds.length}');
-      print('🔍 Debug - Active user IDs: $activeUserIds');
+      // Create a set of existing user IDs for validation
+      Set<String> existingUserIds = users.docs.map((doc) => doc.id).toSet();
+      
+      // Only count active users that actually exist in the users collection
+      Set<String> activeUserIds = allUserIdsFromResults.intersection(existingUserIds);
+      
+      // Ensure totalUsers is accurate and always >= activeUsers
+      // Use the count of existing user IDs to ensure consistency
+      final accurateTotalUsers = existingUserIds.length;
+      
+      // Safety check: totalUsers must be at least as large as activeUsers
+      final finalTotalUsers = accurateTotalUsers < activeUserIds.length 
+          ? activeUserIds.length 
+          : accurateTotalUsers;
+      
+      // Validate and fix role distribution to match finalTotalUsers
+      final calculatedRoleTotal = adminCount + regularUserCount;
+      if (calculatedRoleTotal != finalTotalUsers) {
+        regularUserCount = finalTotalUsers - adminCount;
+      }
 
       // Calculate average score
       double totalScore = 0;
@@ -137,7 +174,7 @@ class AdminService {
       }
 
       return AdminStatsModel(
-        totalUsers: users.size,
+        totalUsers: finalTotalUsers,
         totalQuizzes: quizzes.size,
         totalQuestions: questions.size,
         totalResults: results.size,

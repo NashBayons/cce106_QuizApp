@@ -30,7 +30,9 @@ class AdminStatsModel {
   // Helper getters
   double get userEngagementPercentage {
     if (totalUsers == 0) return 0;
-    return (activeUsers / totalUsers) * 100;
+    // Cap percentage at 100% to handle edge cases where activeUsers might exceed totalUsers
+    final percentage = (activeUsers / totalUsers) * 100;
+    return percentage > 100 ? 100 : percentage;
   }
 
   List<RecentActivityModel> get allRecentActivities {

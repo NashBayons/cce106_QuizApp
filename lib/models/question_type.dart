@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:quiz_app/theme/app_theme.dart';
 
 enum QuestionType {
   multipleChoice,
@@ -37,6 +38,17 @@ extension QuestionTypeX on QuestionType {
         return Icons.toggle_on;
       case QuestionType.identification:
         return Icons.edit_note;
+    }
+  }
+
+  Color get color {
+    switch (this) {
+      case QuestionType.multipleChoice:
+        return AppTheme.primaryColor;
+      case QuestionType.trueFalse:
+        return AppTheme.accentColor;
+      case QuestionType.identification:
+        return AppTheme.secondaryColor;
     }
   }
 

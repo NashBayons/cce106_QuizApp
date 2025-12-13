@@ -6,6 +6,7 @@ import 'package:quiz_app/services/quiz_services.dart';
 import 'package:quiz_app/theme/app_theme.dart';
 import 'package:quiz_app/views/questionviews/addquestion_page.dart';
 import 'package:quiz_app/views/questionviews/question_type_selector_page.dart';
+import 'package:quiz_app/views/questionviews/question_summary_page.dart';
 
 class EditQuizPage extends StatefulWidget {
   final String quizId;
@@ -365,8 +366,16 @@ class _EditQuizPageState extends State<EditQuizPage> {
                             "title": titleCtrl.text.trim(),
                             "description": descCtrl.text.trim(),
                           });
-                          showSnack(context, "Quiz updated!");
-                          Navigator.pop(context);
+                          if (mounted) {
+                            showSnack(context, "Quiz updated!");
+                            // Navigate to summary page instead of going back
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => QuestionSummaryPage(quizId: widget.quizId),
+                              ),
+                            );
+                          }
                         },
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 18),

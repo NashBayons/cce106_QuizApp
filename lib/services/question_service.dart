@@ -52,17 +52,27 @@ class QuestionService {
 
   /// Stream converted to List<QuestionModel>
   Stream<List<QuestionModel>> getQuestions(String quizId) {
-    return _db
-        .collection('users')
-        .doc(userId)
-        .collection('quizzes')
-        .doc(quizId)
-        .collection('questions')
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => QuestionModel.fromMap(doc.id, doc.data()))
-            .toList());
+    return getQuestionsRaw(quizId)
+        .map((snapshot) {
+          print("📊 Got ${snapshot.docs.length} questions from Firebase for quizId: $quizId");
+          for (var doc in snapshot.docs) {
+            print("📄 Question doc: ${doc.id} - ${doc.data()}");
+          }
+          return snapshot.docs
+              .map((doc) {
+                try {
+                  final data = doc.data() as Map<String, dynamic>?;
+                  if (data == null) {
+                    throw Exception("Document data is null for doc ${doc.id}");
+                  }
+                  return QuestionModel.fromMap(doc.id, data);
+                } catch (e) {
+                  print("❌ Error parsing question: $e");
+                  rethrow;
+                }
+              })
+              .toList();
+        });
   }
 
   /// Update question (partial or full)

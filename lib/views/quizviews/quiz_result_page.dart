@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:quiz_app/models/question_model.dart';
 import 'package:quiz_app/models/quiz_result_model.dart';
 import 'package:quiz_app/services/quiz_result_service.dart';
+import 'package:quiz_app/theme/app_theme.dart';
+import 'package:quiz_app/views/quizviews/take_quiz_page.dart';
 
 
 class QuizResultPage extends StatefulWidget {
@@ -71,11 +73,11 @@ class _QuizResultPageState extends State<QuizResultPage> {
   }
 
   Color get gradeColor {
-    if (percentage >= 90) return Colors.green;
-    if (percentage >= 80) return Colors.lightGreen;
-    if (percentage >= 70) return Colors.orange;
-    if (percentage >= 60) return Colors.deepOrange;
-    return Colors.red;
+    if (percentage >= 90) return AppTheme.accentColor;
+    if (percentage >= 80) return AppTheme.accentColor;
+    if (percentage >= 70) return AppTheme.warningColor;
+    if (percentage >= 60) return AppTheme.warningColor;
+    return AppTheme.errorColor;
   }
 
   String _normalize(String value) =>
@@ -84,51 +86,66 @@ class _QuizResultPageState extends State<QuizResultPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
-        title: const Text("Quiz Results"),
-        backgroundColor: const Color(0xff9d8eff),
-        automaticallyImplyLeading: false,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        title: const Text(
+          "Quiz Results",
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: AppTheme.textPrimary,
+          ),
+        ),
+        centerTitle: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded, color: AppTheme.textPrimary),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
-      backgroundColor: const Color(0xffdcd6ff),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Score Card
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(30),
+                padding: const EdgeInsets.all(32),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
+                      color: Colors.black.withOpacity(0.06),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
                 child: Column(
                   children: [
-                    const Text(
+                    Text(
                       "Your Score",
                       style: TextStyle(
-                        fontSize: 24,
+                        fontSize: 22,
                         fontWeight: FontWeight.bold,
+                        color: AppTheme.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
                     Container(
-                      width: 150,
-                      height: 150,
+                      width: 140,
+                      height: 140,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: gradeColor.withOpacity(0.2),
+                        color: gradeColor.withOpacity(0.12),
                         border: Border.all(
                           color: gradeColor,
-                          width: 8,
+                          width: 6,
                         ),
                       ),
                       child: Center(
@@ -138,16 +155,17 @@ class _QuizResultPageState extends State<QuizResultPage> {
                             Text(
                               grade,
                               style: TextStyle(
-                                fontSize: 60,
+                                fontSize: 56,
                                 fontWeight: FontWeight.bold,
                                 color: gradeColor,
                               ),
                             ),
+                            const SizedBox(height: 4),
                             Text(
                               "${percentage.toStringAsFixed(0)}%",
                               style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
                                 color: gradeColor,
                               ),
                             ),
@@ -155,35 +173,39 @@ class _QuizResultPageState extends State<QuizResultPage> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 20),
-                    Text(
-                      "${widget.correctAnswers} / ${widget.totalQuestions} Correct",
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
+                    const SizedBox(height: 24),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppTheme.backgroundColor,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        "${widget.correctAnswers} / ${widget.totalQuestions} Correct",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.textPrimary,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 30),
-              // Review Answers Section
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: const Text(
-                  "Review Your Answers",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+              const SizedBox(height: 28),
+              // Review Answers Section Header
+              Text(
+                "Review Your Answers",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textPrimary,
                 ),
               ),
-              const SizedBox(height: 15),
+              const SizedBox(height: 16),
               // Question Review List
               ...widget.questions.asMap().entries.map((entry) {
                 final index = entry.key;
@@ -222,105 +244,153 @@ class _QuizResultPageState extends State<QuizResultPage> {
                       : 'No correct answer set';
                 }
 
+                final answerColor = isCorrect ? AppTheme.accentColor : AppTheme.errorColor;
+                
                 return Container(
-                  margin: const EdgeInsets.only(bottom: 15),
+                  margin: const EdgeInsets.only(bottom: 16),
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(15),
+                    borderRadius: BorderRadius.circular(18),
                     border: Border.all(
-                      color: isCorrect ? Colors.green : Colors.red,
-                      width: 2,
+                      color: answerColor.withOpacity(0.3),
+                      width: 1.5,
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
-                          Icon(
-                            isCorrect ? Icons.check_circle : Icons.cancel,
-                            color: isCorrect ? Colors.green : Colors.red,
-                            size: 28,
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: answerColor.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              isCorrect ? Icons.check_circle_rounded : Icons.cancel_rounded,
+                              color: answerColor,
+                              size: 24,
+                            ),
                           ),
-                          const SizedBox(width: 10),
+                          const SizedBox(width: 12),
                           Expanded(
                             child: Text(
                               "Question ${index + 1}",
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
+                                color: AppTheme.textPrimary,
                               ),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 16),
                       Text(
                         question.question,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
+                          color: AppTheme.textPrimary,
+                          height: 1.4,
                         ),
                       ),
-                      const SizedBox(height: 15),
+                      const SizedBox(height: 16),
                       Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: isCorrect
-                              ? Colors.green.withOpacity(0.1)
-                              : Colors.red.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(10),
+                          color: answerColor.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: isCorrect ? Colors.green : Colors.red,
+                            color: answerColor.withOpacity(0.2),
+                            width: 1,
                           ),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              "Your Answer:",
-                              style: TextStyle(
-                                fontSize: 12,
-                                color:
-                                    isCorrect ? Colors.green : Colors.red,
-                                fontWeight: FontWeight.bold,
-                              ),
+                            Row(
+                              children: [
+                                Icon(
+                                  isCorrect ? Icons.check_circle_outline : Icons.error_outline,
+                                  color: answerColor,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  "Your Answer:",
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: answerColor,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 5),
+                            const SizedBox(height: 8),
                             Text(
                               userAnswerText,
-                              style: const TextStyle(fontSize: 14),
+                              style: TextStyle(
+                                fontSize: 15,
+                                color: AppTheme.textPrimary,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ],
                         ),
                       ),
                       if (!isCorrect) ...[
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 12),
                         Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.all(12),
+                          padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: Colors.green.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: Colors.green),
+                            color: AppTheme.accentColor.withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppTheme.accentColor.withOpacity(0.2),
+                              width: 1,
+                            ),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                "Correct Answer:",
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.green,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.check_circle_outline,
+                                    color: AppTheme.accentColor,
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    "Correct Answer:",
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: AppTheme.accentColor,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 5),
+                              const SizedBox(height: 8),
                               Text(
                                 correctAnswerText,
-                                style: const TextStyle(fontSize: 14),
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  color: AppTheme.textPrimary,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                             ],
                           ),
@@ -330,30 +400,78 @@ class _QuizResultPageState extends State<QuizResultPage> {
                   ),
                 );
               }).toList(),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
               // Action Buttons
-              SizedBox(
-                width: double.infinity,
-                height: 55,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context); // Go back to quiz list
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xff9d8eff),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppTheme.textPrimary,
+                        side: BorderSide(
+                          color: AppTheme.borderColor,
+                          width: 1.5,
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        "Back to Quizzes",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
-                  child: const Text(
-                    "Back to Quizzes",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        // Navigate to retry the quiz
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => QuizTakingPage(
+                              quizId: widget.quizId,
+                              quizTitle: widget.quizTitle,
+                            ),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.refresh_rounded, size: 20),
+                          SizedBox(width: 8),
+                          Text(
+                            "Retry Quiz",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
+                ],
               ),
+              const SizedBox(height: 8),
             ],
           ),
         ),

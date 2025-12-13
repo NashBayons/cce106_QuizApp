@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:quiz_app/models/question_type.dart';
 import 'package:quiz_app/theme/app_theme.dart';
 import 'package:quiz_app/views/questionviews/addquestion_page.dart';
+import 'package:quiz_app/views/questionviews/question_summary_page.dart';
 
 class QuestionTypeSelectorPage extends StatelessWidget {
   final String quizId;
@@ -22,6 +23,22 @@ class QuestionTypeSelectorPage extends StatelessWidget {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => QuestionSummaryPage(quizId: quizId),
+                  ),
+                );
+              },
+              child: const Text('Done'),
+            ),
+          ),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(

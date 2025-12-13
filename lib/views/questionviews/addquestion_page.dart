@@ -4,6 +4,7 @@ import 'package:quiz_app/models/question_type.dart';
 import 'package:quiz_app/services/question_service.dart';
 import 'package:quiz_app/theme/app_theme.dart';
 import 'package:quiz_app/widgets/image_picker_widget.dart';
+import 'package:quiz_app/views/questionviews/question_summary_page.dart';
 
 class AddQuestionPage extends StatefulWidget {
   final String quizId;
@@ -172,6 +173,7 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
       if (widget.existingQuestionId == null) {
         await questionService.addQuestion(widget.quizId, question);
         if (mounted) {
+          print("✅ Question saved successfully!");
           _showSnackBar("Question added. You can add another.", isError: false);
           _resetFormForNextQuestion();
         }
@@ -247,7 +249,15 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
                     const Spacer(),
                     if (!isEditMode)
                       TextButton(
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () {
+                          // Navigate to summary page to review and edit questions
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => QuestionSummaryPage(quizId: widget.quizId),
+                            ),
+                          );
+                        },
                         child: const Text('Done'),
                       ),
                   ],
