@@ -358,12 +358,47 @@ class _EditQuizPageState extends State<EditQuizPage> {
                       flex: 2,
                       child: ElevatedButton(
                         onPressed: () async {
-                          if (titleCtrl.text.trim().isEmpty) {
+                          final newTitle = titleCtrl.text.trim();
+                          
+                          if (newTitle.isEmpty) {
                             showSnack(context, "Quiz title cannot be empty.");
                             return;
                           }
+                          
+                          // Check for duplicate quiz title (excluding current quiz)
+                          final isDuplicate = await quizService.isQuizTitleDuplicate(
+                            newTitle,
+                            excludeQuizId: widget.quizId,
+                          );
+                          
+                          if (isDuplicate) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Row(
+                                    children: [
+                                      const Icon(Icons.error_outline, color: Colors.white),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text("A quiz with this title already exists. Please choose a different name."),
+                                      ),
+                                    ],
+                                  ),
+                                  behavior: SnackBarBehavior.floating,
+                                  backgroundColor: AppTheme.errorColor,
+                                  margin: const EdgeInsets.all(16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  duration: const Duration(seconds: 3),
+                                ),
+                              );
+                            }
+                            return;
+                          }
+                          
                           await quizService.updateQuiz(widget.quizId, {
-                            "title": titleCtrl.text.trim(),
+                            "title": newTitle,
                             "description": descCtrl.text.trim(),
                           });
                           if (mounted) {

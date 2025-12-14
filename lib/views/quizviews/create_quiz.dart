@@ -34,8 +34,42 @@ class _CreateQuizPageState extends State<CreateQuizPage> {
     });
 
     try {
+      final quizTitle = quizTitleCtrl.text.trim();
+      
+      // Check for duplicate quiz title
+      final isDuplicate = await quizService.isQuizTitleDuplicate(quizTitle);
+      
+      if (isDuplicate) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text("A quiz with this title already exists. Please choose a different name."),
+                  ),
+                ],
+              ),
+              behavior: SnackBarBehavior.floating,
+              backgroundColor: AppTheme.errorColor,
+              margin: const EdgeInsets.all(16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+      
       final quizId = await quizService.addQuiz(
-        quizTitleCtrl.text.trim(),
+        quizTitle,
         quizDescCtrl.text.trim(),
       );
 

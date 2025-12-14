@@ -68,5 +68,33 @@ class QuizService {
         .snapshots();
   }
 
+  /// Check if a quiz title already exists (case-insensitive)
+  /// [excludeQuizId] - Optional quiz ID to exclude from check (for editing)
+  Future<bool> isQuizTitleDuplicate(String title, {String? excludeQuizId}) async {
+    final normalizedTitle = title.trim().toLowerCase();
+    
+    final snapshot = await _db
+        .collection("users")
+        .doc(userId)
+        .collection("quizzes")
+        .get();
+    
+    for (var doc in snapshot.docs) {
+      // Skip the quiz being edited
+      if (excludeQuizId != null && doc.id == excludeQuizId) {
+        continue;
+      }
+      
+      final data = doc.data() as Map<String, dynamic>;
+      final existingTitle = (data['title'] as String?)?.trim().toLowerCase() ?? '';
+      
+      if (existingTitle == normalizedTitle) {
+        return true; // Duplicate found
+      }
+    }
+    
+    return false; // No duplicate
+  }
+
   
 }
