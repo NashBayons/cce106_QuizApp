@@ -8,13 +8,52 @@ class AdminService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   /// Fetch comprehensive admin statistics
-  Future<AdminStatsModel> getAdminStats() async {
+  /// [startDate] - Optional start date for filtering data. If null, fetches all data.
+  /// [endDate] - Optional end date for filtering data. If null, no upper bound.
+  Future<AdminStatsModel> getAdminStats({DateTime? startDate, DateTime? endDate}) async {
     try {
       // Fetch all collections
       final users = await _firestore.collection("users").get();
-      final quizzes = await _firestore.collectionGroup("quizzes").get();
+      
+      // Fetch all quizzes (we'll filter client-side to avoid index requirements)
+      final allQuizzes = await _firestore.collectionGroup("quizzes").get();
+      
+      // Filter quizzes by date range if specified
+      final quizzes = allQuizzes.docs.where((doc) {
+        if (startDate == null && endDate == null) return true;
+        
+        final data = doc.data() as Map<String, dynamic>;
+        final createdAtStr = data['createdAt'] as String?;
+        if (createdAtStr == null) return false;
+        
+        final createdAt = DateTime.parse(createdAtStr);
+        
+        if (startDate != null && createdAt.isBefore(startDate)) return false;
+        if (endDate != null && createdAt.isAfter(endDate)) return false;
+        
+        return true;
+      }).toList();
+      
       final questions = await _firestore.collectionGroup("questions").get();
-      final results = await _firestore.collectionGroup("results").get();
+      
+      // Fetch all results (we'll filter client-side to avoid index requirements)
+      final allResults = await _firestore.collectionGroup("results").get();
+      
+      // Filter results by date range if specified
+      final results = allResults.docs.where((doc) {
+        if (startDate == null && endDate == null) return true;
+        
+        final data = doc.data() as Map<String, dynamic>;
+        final completedAtStr = data['completedAt'] as String?;
+        if (completedAtStr == null) return false;
+        
+        final completedAt = DateTime.parse(completedAtStr);
+        
+        if (startDate != null && completedAt.isBefore(startDate)) return false;
+        if (endDate != null && completedAt.isAfter(endDate)) return false;
+        
+        return true;
+      }).toList();
 
       // Calculate QUESTION type distribution (not quiz types)
       Map<String, int> questionTypeCounts = {
@@ -85,7 +124,7 @@ class AdminService {
       // Calculate active users (users who have taken quizzes)
       // Extract user IDs from results and only count those that exist in users collection
       Set<String> allUserIdsFromResults = {};
-      for (var doc in results.docs) {
+      for (var doc in results) {
         // The path is: users/{userId}/results/{resultId}
         // We need to get the userId from the parent collection
         final parentRef = doc.reference.parent.parent;
@@ -118,8 +157,8 @@ class AdminService {
       // Calculate average score
       double totalScore = 0;
       int scoreCount = 0;
-      for (var doc in results.docs) {
-        final data = doc.data();
+      for (var doc in results) {
+        final data = doc.data() as Map<String, dynamic>;
         if (data.containsKey('percentage')) {
           totalScore += (data['percentage'] as num).toDouble();
           scoreCount++;
@@ -129,16 +168,18 @@ class AdminService {
 
       // Get recent quiz attempts (last 5)
       List<RecentActivityModel> recentAttempts = [];
-      final sortedResults = results.docs.toList()
+      final sortedResults = results.toList()
         ..sort((a, b) {
-          final aTime = a.data()['completedAt'] as String?;
-          final bTime = b.data()['completedAt'] as String?;
+          final aData = a.data() as Map<String, dynamic>;
+          final bData = b.data() as Map<String, dynamic>;
+          final aTime = aData['completedAt'] as String?;
+          final bTime = bData['completedAt'] as String?;
           if (aTime == null || bTime == null) return 0;
           return DateTime.parse(bTime).compareTo(DateTime.parse(aTime));
         });
 
       for (var i = 0; i < sortedResults.length && i < 5; i++) {
-        final data = sortedResults[i].data();
+        final data = sortedResults[i].data() as Map<String, dynamic>;
         final percentage = (data['percentage'] ?? 0).toDouble();
         recentAttempts.add(RecentActivityModel(
           title: data['quizTitle'] ?? 'Unknown Quiz',
@@ -152,17 +193,19 @@ class AdminService {
       }
 
       // Get recently created quizzes (last 5)
-      final sortedQuizzes = quizzes.docs.toList()
+      final sortedQuizzes = quizzes.toList()
         ..sort((a, b) {
-          final aTime = a.data()['createdAt'] as String?;
-          final bTime = b.data()['createdAt'] as String?;
+          final aData = a.data() as Map<String, dynamic>;
+          final bData = b.data() as Map<String, dynamic>;
+          final aTime = aData['createdAt'] as String?;
+          final bTime = bData['createdAt'] as String?;
           if (aTime == null || bTime == null) return 0;
           return DateTime.parse(bTime).compareTo(DateTime.parse(aTime));
         });
 
       List<RecentActivityModel> recentQuizzes = [];
       for (var i = 0; i < sortedQuizzes.length && i < 5; i++) {
-        final data = sortedQuizzes[i].data();
+        final data = sortedQuizzes[i].data() as Map<String, dynamic>;
         recentQuizzes.add(RecentActivityModel(
           title: data['title'] ?? 'Untitled Quiz',
           subtitle: data['description'] ?? 'No description',
@@ -175,9 +218,9 @@ class AdminService {
 
       return AdminStatsModel(
         totalUsers: finalTotalUsers,
-        totalQuizzes: quizzes.size,
+        totalQuizzes: quizzes.length,
         totalQuestions: questions.size,
-        totalResults: results.size,
+        totalResults: results.length,
         questionTypeCounts: questionTypeCounts,
         adminCount: adminCount,
         regularUserCount: regularUserCount,

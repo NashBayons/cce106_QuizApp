@@ -3,6 +3,7 @@ import 'package:quiz_app/services/quiz_services.dart';
 import 'package:quiz_app/theme/app_theme.dart';
 import 'package:quiz_app/views/quizviews/edit_quiz.dart';
 import 'package:quiz_app/views/quizviews/take_quiz_page.dart';
+import 'package:quiz_app/views/quizviews/quiz_review_page.dart';
 
 class QuizListPage extends StatefulWidget {
   @override
@@ -240,6 +241,51 @@ class _QuizListPageState extends State<QuizListPage> {
                   ),
                 ),
                 const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => QuizReviewPage(
+                            quizId: quizId,
+                            quizTitle: title,
+                          ),
+                        ),
+                      );
+                    },
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppTheme.secondaryColor,
+                      side: BorderSide(
+                        color: AppTheme.secondaryColor,
+                        width: 1.5,
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.menu_book_rounded, size: 18),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            'Review',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
                 _buildIconButton(
                   icon: Icons.edit_rounded,
                   color: AppTheme.warningColor,
@@ -281,7 +327,7 @@ class _QuizListPageState extends State<QuizListPage> {
       style: ElevatedButton.styleFrom(
         backgroundColor: color,
         foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
@@ -289,14 +335,18 @@ class _QuizListPageState extends State<QuizListPage> {
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 20),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
+          Icon(icon, size: 18),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],

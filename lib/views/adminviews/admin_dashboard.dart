@@ -5,6 +5,14 @@ import 'package:quiz_app/services/admin_service.dart';
 import 'package:quiz_app/theme/app_theme.dart';
 import 'package:quiz_app/views/authviews/login_page.dart';
 
+enum DateFilterPeriod {
+  today,
+  weekly,
+  monthly,
+  allTime,
+  custom,
+}
+
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
 
@@ -17,6 +25,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
   AdminStatsModel? stats;
   bool isLoading = true;
   String? errorMessage;
+  DateFilterPeriod selectedFilter = DateFilterPeriod.allTime;
+  DateTime? customStartDate;
+  DateTime? customEndDate;
 
   @override
   void initState() {
@@ -31,7 +42,38 @@ class _AdminDashboardState extends State<AdminDashboard> {
     });
 
     try {
-      final fetchedStats = await _adminService.getAdminStats();
+      // Calculate date range based on selected filter
+      DateTime? startDate;
+      DateTime? endDate;
+      final now = DateTime.now();
+      
+      switch (selectedFilter) {
+        case DateFilterPeriod.today:
+          startDate = DateTime(now.year, now.month, now.day);
+          endDate = DateTime(now.year, now.month, now.day, 23, 59, 59);
+          break;
+        case DateFilterPeriod.weekly:
+          startDate = now.subtract(const Duration(days: 7));
+          endDate = now;
+          break;
+        case DateFilterPeriod.monthly:
+          startDate = now.subtract(const Duration(days: 30));
+          endDate = now;
+          break;
+        case DateFilterPeriod.custom:
+          startDate = customStartDate;
+          endDate = customEndDate;
+          break;
+        case DateFilterPeriod.allTime:
+          startDate = null;
+          endDate = null;
+          break;
+      }
+      
+      final fetchedStats = await _adminService.getAdminStats(
+        startDate: startDate,
+        endDate: endDate,
+      );
       setState(() {
         stats = fetchedStats;
         isLoading = false;
@@ -87,6 +129,231 @@ class _AdminDashboardState extends State<AdminDashboard> {
     }
   }
 
+  Future<void> _showCustomDatePicker() async {
+    final now = DateTime.now();
+    DateTime? startDate = customStartDate;
+    DateTime? endDate = customEndDate;
+
+    final result = await showDialog<Map<String, DateTime?>>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.date_range_rounded,
+                  color: AppTheme.primaryColor,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text('Custom Date Range'),
+              ),
+            ],
+          ),
+          content: SizedBox(
+            width: 300,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Start Date',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                InkWell(
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: startDate ?? now,
+                      firstDate: DateTime(2020),
+                      lastDate: now,
+                      builder: (context, child) {
+                        return Theme(
+                          data: Theme.of(context).copyWith(
+                            colorScheme: ColorScheme.light(
+                              primary: AppTheme.primaryColor,
+                            ),
+                          ),
+                          child: child!,
+                        );
+                      },
+                    );
+                    if (picked != null) {
+                      setDialogState(() {
+                        startDate = picked;
+                      });
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: AppTheme.borderColor),
+                      borderRadius: BorderRadius.circular(12),
+                      color: AppTheme.backgroundColor,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          startDate != null
+                              ? _formatDate(startDate!)
+                              : 'Select start date',
+                          style: TextStyle(
+                            color: startDate != null
+                                ? AppTheme.textPrimary
+                                : AppTheme.textSecondary,
+                          ),
+                        ),
+                        Icon(
+                          Icons.calendar_today_rounded,
+                          size: 18,
+                          color: AppTheme.primaryColor,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'End Date',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                InkWell(
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: endDate ?? now,
+                      firstDate: startDate ?? DateTime(2020),
+                      lastDate: now,
+                      builder: (context, child) {
+                        return Theme(
+                          data: Theme.of(context).copyWith(
+                            colorScheme: ColorScheme.light(
+                              primary: AppTheme.primaryColor,
+                            ),
+                          ),
+                          child: child!,
+                        );
+                      },
+                    );
+                    if (picked != null) {
+                      setDialogState(() {
+                        endDate = picked;
+                      });
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: AppTheme.borderColor),
+                      borderRadius: BorderRadius.circular(12),
+                      color: AppTheme.backgroundColor,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          endDate != null
+                              ? _formatDate(endDate!)
+                              : 'Select end date',
+                          style: TextStyle(
+                            color: endDate != null
+                                ? AppTheme.textPrimary
+                                : AppTheme.textSecondary,
+                          ),
+                        ),
+                        Icon(
+                          Icons.calendar_today_rounded,
+                          size: 18,
+                          color: AppTheme.primaryColor,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: startDate != null && endDate != null
+                  ? () => Navigator.pop(context, {
+                        'startDate': startDate,
+                        'endDate': endDate,
+                      })
+                  : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: AppTheme.borderColor,
+              ),
+              child: const Text('Apply'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (result != null) {
+      setState(() {
+        customStartDate = result['startDate'];
+        customEndDate = result['endDate'];
+        selectedFilter = DateFilterPeriod.custom;
+      });
+      loadStats();
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    final months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return '${months[date.month - 1]} ${date.day}, ${date.year}';
+  }
+
+  String _getFilterLabel(DateFilterPeriod filter) {
+    switch (filter) {
+      case DateFilterPeriod.today:
+        return 'Today';
+      case DateFilterPeriod.weekly:
+        return 'Weekly';
+      case DateFilterPeriod.monthly:
+        return 'Monthly';
+      case DateFilterPeriod.allTime:
+        return 'All Time';
+      case DateFilterPeriod.custom:
+        if (customStartDate != null && customEndDate != null) {
+          return '${_formatDate(customStartDate!)} - ${_formatDate(customEndDate!)}';
+        }
+        return 'Custom';
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -97,6 +364,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
         child: CustomScrollView(
           slivers: [
             _buildModernAppBar(context),
+            SliverToBoxAdapter(
+              child: _buildDateFilterChips(),
+            ),
             SliverToBoxAdapter(
               child: Builder(
                 builder: (context) {
@@ -342,6 +612,100 @@ class _AdminDashboardState extends State<AdminDashboard> {
       ),
     );
   }
+
+  Widget _buildDateFilterChips() {
+    final filters = [
+      DateFilterPeriod.today,
+      DateFilterPeriod.weekly,
+      DateFilterPeriod.monthly,
+      DateFilterPeriod.allTime,
+      DateFilterPeriod.custom,
+    ];
+
+    return Container(
+      height: 50,
+      margin: const EdgeInsets.symmetric(vertical: 12),
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: filters.length,
+        separatorBuilder: (context, index) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final filter = filters[index];
+          final isSelected = selectedFilter == filter;
+          
+          return Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                if (filter == DateFilterPeriod.custom) {
+                  _showCustomDatePicker();
+                } else {
+                  setState(() {
+                    selectedFilter = filter;
+                  });
+                  loadStats();
+                }
+              },
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? AppTheme.primaryColor
+                      : Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isSelected
+                        ? AppTheme.primaryColor
+                        : AppTheme.borderColor,
+                    width: 1.5,
+                  ),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: AppTheme.primaryColor.withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ]
+                      : [],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      filter == DateFilterPeriod.custom
+                          ? Icons.date_range_rounded
+                          : filter == DateFilterPeriod.today
+                              ? Icons.today_rounded
+                              : filter == DateFilterPeriod.weekly
+                                  ? Icons.calendar_view_week_rounded
+                                  : filter == DateFilterPeriod.monthly
+                                      ? Icons.calendar_month_rounded
+                                      : Icons.all_inclusive_rounded,
+                      size: 18,
+                      color: isSelected ? Colors.white : AppTheme.textSecondary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      _getFilterLabel(filter),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                        color: isSelected ? Colors.white : AppTheme.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
 
   Widget _buildQuickSummaryCards() {
     return Row(
