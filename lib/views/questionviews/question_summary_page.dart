@@ -32,11 +32,23 @@ class _QuestionSummaryPageState extends State<QuestionSummaryPage> {
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppTheme.primaryColor,
         elevation: 0,
         scrolledUnderElevation: 0,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppTheme.primaryColor,
+                AppTheme.primaryColor.withOpacity(0.8),
+              ],
+            ),
+          ),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
@@ -44,6 +56,7 @@ class _QuestionSummaryPageState extends State<QuestionSummaryPage> {
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w700,
+            color: Colors.white,
           ),
         ),
         centerTitle: false,

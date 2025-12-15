@@ -20,18 +20,31 @@ class _QuizListPageState extends State<QuizListPage> {
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppTheme.primaryColor,
         elevation: 0,
         scrolledUnderElevation: 0,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppTheme.primaryColor,
+                AppTheme.primaryColor.withOpacity(0.8),
+              ],
+            ),
+          ),
+        ),
         title: const Text(
           "My Quizzes",
           style: TextStyle(
             fontSize: 26,
             fontWeight: FontWeight.bold,
-            color: AppTheme.textPrimary,
+            color: Colors.white,
           ),
         ),
         centerTitle: false,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: StreamBuilder(
         stream: quizService.getQuizzes(),
@@ -224,7 +237,7 @@ class _QuizListPageState extends State<QuizListPage> {
               children: [
                 Expanded(
                   child: _buildPrimaryButton(
-                    label: 'Take Quiz',
+                    label: 'Quiz',
                     icon: Icons.play_arrow_rounded,
                     color: AppTheme.primaryColor,
                     onPressed: () {
